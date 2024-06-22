@@ -1,3 +1,5 @@
+# Created by: José Sánchez - Human Technology
+
 import board
 import busio
 import digitalio
