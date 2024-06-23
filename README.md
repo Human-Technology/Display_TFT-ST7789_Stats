@@ -84,7 +84,7 @@ Esto nos retornara algo como lo siguiente:
 ```
 en mi caso "human" es mi nombre de usuario, una vez que ya tenemos esta ruta podemos agregarla a crontab, para ello ejecutamos:
 ```bash
-crontrab -e
+crontab -e
 ```
 en la parte de hasta abajo, colocamos lo siguiente:
 ```bash
