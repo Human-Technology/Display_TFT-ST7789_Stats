@@ -88,11 +88,11 @@ crontab -e
 ```
 en la parte de hasta abajo, colocamos lo siguiente:
 ```bash
-@reboot DIR/Display_TFT-ST7789_Stats/dataDisplay.py &
+@reboot python DIR/Display_TFT-ST7789_Stats/dataDisplay.py &
 ```
 en este caso "DIR", es la ruta absoluta obtenida anteriormente con el comando pwd, para mi queda de la siguiente manera:
 ```bash
-@reboot /home/human/Display_TFT-ST7789_Stats/dataDisplay.py &
+@reboot python /home/human/Display_TFT-ST7789_Stats/dataDisplay.py &
 ```
 Por último guardamos cambios con ctrl+o y cerramos el documento con ctrl+x
 ---------------------------------------------
