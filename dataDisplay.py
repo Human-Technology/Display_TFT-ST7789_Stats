@@ -62,28 +62,24 @@ def ip():
     return d1
 
 
-def serviceJellyfin():
-    """
-        Funcion retorno del estatus de Jellyfin
+def service_status(service_name):
+    try:
+        command = f"systemctl is-active {service_name}"
+        status = str(subprocess.check_output(command, shell=True), 'utf-8').strip()
+        return status
+    except subprocess.CalledProcessError:
+        return None
 
-        :return:
-            d1 -> str -> Cadena de texto con el estatus de Jellfin (Activo o desactivado)
-    """
-    command = "systemctl is-active jellyfin.service"
-    d1 = str(subprocess.check_output(command, shell=True), 'utf-8')
-    return d1
+def service_installed(service_name):
+    try:
+        command = f"systemctl list-units --full -all | grep -Fq {service_name}"
+        subprocess.check_output(command, shell=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
-
-def serviceApache():
-    """
-        Funcion retorno del estatus de Apache
-
-        :return:
-            d1 -> str -> Cadena de texto con el estatus de Apache (Activo o desactivado)
-    """
-    command = "systemctl is-active apache2"
-    d1 = str(subprocess.check_output(command, shell=True), 'utf-8')
-    return d1
+#espera 60 segundos para asegurar de que el sistema se ha inicializado completamente
+time.sleep(60)
 
 # Configuración de pines
 cs_pin = digitalio.DigitalInOut(board.CE0)  # Pin CS (Chip Select)
@@ -127,21 +123,44 @@ font_path = "minecraft_font.ttf" #Path de la fuenta
 font_size = 16                  #Tamaño del texto
 font = ImageFont.truetype(font_path, font_size) #Objeto de la fuente
 
-#Bucle Infinito
+#Verifica si los servicion estan instalados
+jellyfin_installed = service_installed("jellyfin.service")
+apache_installed = service_installed("apache2")
+
+# Bucle Infinito
 while True:
-    draw.rectangle((0, 0, display.height, display.width), fill=(0, 0, 0))  # limpiar la pantalla
+    try:
+        draw.rectangle((0, 0, display.height, display.width), fill=(0, 0, 0))  # limpiar la pantalla
 
-    #Textos en coordenadas
-    draw.text((10, 10), "IP: " + ip(), font=font, fill=(255, 255, 255))
-    draw.text((10, 35), "Jellyfin: " + serviceJellyfin(), font=font, fill=(255,255,255))
-    draw.text((10, 60), "Apache: " + serviceApache(), font=font, fill=(255,255,255))
-    draw.text((10, 75), "-----------------------", font=font, fill=(255, 255, 255))
-    draw.text((10, 90), cpu(), font=font, fill=(255, 255, 255))
-    draw.text((10, 115), mem(), font=font, fill=(255, 255, 255))
-    draw.text((10, 140), disk(), font=font, fill=(255, 255, 255))
+        draw.text((10, 10), "IP: " + ip(), font=font, fill=(255, 255, 255)) #muestra la direccion IP
 
-    # Muestra contendio en el display
-    display.image(image)
+        #Verifica si Jellyfin esta instalado
+        if jellyfin_installed:
+            #Si lo esta entonces verifica si esta iniciado
+            jellyfin_status = service_status("jellyfin.service")
+            draw.text((10, 35), "Jellyfin: " + jellyfin_status, font=font, fill=(255, 255, 255))
+        else:
+            #Si no lo esta muestra mensaje no instalado
+            draw.text((10, 35), "Jellyfin no instalado", font=font, fill=(255, 255, 255))
 
-    #Tiempo de espera en segundos
-    time.sleep(1)
+        #verifica si el servicio de apache esta instalado
+        if apache_installed:
+            #si lo esta entonces verifica si esta iniciado
+            apache_status = service_status("apache2")
+            draw.text((10, 60), "Apache: " + apache_status, font=font, fill=(255, 255, 255))
+        else:
+            #si no lo esta muestra mensaje de no instalado
+            draw.text((10, 60), "Apache no instalado", font=font, fill=(255, 255, 255))
+
+        draw.text((10, 75), "-----------------------", font=font, fill=(255, 255, 255))
+        draw.text((10, 90), cpu(), font=font, fill=(255, 255, 255)) #Informacion de la CPU
+        draw.text((10, 115), mem(), font=font, fill=(255, 255, 255)) #Informacion de la memoria
+        draw.text((10, 140), disk(), font=font, fill=(255, 255, 255)) #Informacion del disco
+
+        display.image(image)
+        time.sleep(1)
+    except subprocess.CalledProcessError:
+        draw.rectangle((0, 0, display.height, display.width), fill=(0, 0, 0))  # limpiar la pantalla
+        draw.text((10, 10), "Error en ejecución", font=font, fill=(255, 0, 0))
+        display.image(image)
+        time.sleep(1)
